@@ -271,20 +271,20 @@ spec:
 # Выполнение задания 1
 Применяю манифест
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl apply -f containers-data-exchange.yaml
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl apply -f containers-data-exchange.yaml
 deployment.apps/data-exchange created
 ```
 
 Узнаю имя пода
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get po
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl get po
 NAME                                             READY   STATUS    RESTARTS      AGE
 data-exchange-77895dc648-lddws                   2/2     Running   0             38s
 ```
 
 Смотрю подробную информацию о поде
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl describe pod data-exchange-77895dc648-lddws
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl describe pod data-exchange-77895dc648-lddws
 ```
 
 Вывод:
@@ -377,7 +377,7 @@ Events:
 
 Подключаеюсь к контейнеру `multitool` и читаю общий файл, в который busybox записывает данные
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl exec data-exchange-77895dc648-lddws -c multitool -- tail -f /shared/data.txt
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl exec data-exchange-77895dc648-lddws -c multitool -- tail -f /shared/data.txt
 Sun Jul  5 17:44:59 UTC 2026
 Sun Jul  5 17:45:04 UTC 2026
 Sun Jul  5 17:45:09 UTC 2026
@@ -461,11 +461,11 @@ spec:
 
 Cоздание директории и включения `hostpath-storage`
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# mkdir -p /data/pv-shared
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# mkdir -p /data/pv-shared
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# chmod 777 /data/pv-shared
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# chmod 777 /data/pv-shared
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s enablee hostpath-storage
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s enablee hostpath-storage
 'enablee' is not a valid MicroK8s subcommand.
 Available subcommands are:
 	add-node
@@ -492,7 +492,7 @@ Available subcommands are:
 	stop
 	version
 	inspect
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s enable hostpath-storage
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s enable hostpath-storage
 Infer repository core for addon hostpath-storage
 Enabling default storage class.
 WARNING: Hostpath storage is not suitable for production environments.
@@ -509,9 +509,9 @@ Storage will be available soon.
 Применение манифеста pv-pvc.yaml
 
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# nano pv-pvc.yaml
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# nano pv-pvc.yaml
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl apply -f pv-pvc.yaml
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl apply -f pv-pvc.yaml
 persistentvolume/pv-local created
 persistentvolumeclaim/pvc-local created
 deployment.apps/pvc-deployment created
@@ -519,22 +519,22 @@ deployment.apps/pvc-deployment created
 
 Вывод `kubectl get pv`,`pvc` и `kubectl get po`
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get pv
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl get pv
 NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM               STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
 pv-local   1Gi        RWO            Retain           Bound    default/pvc-local   manual         <unset>                          2m12s
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get pvc
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl get pvc
 NAME        STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 pvc-local   Bound    pv-local   1Gi        RWO            manual         <unset>                 2m19s
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get po
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl get po
 NAME                                             READY   STATUS    RESTARTS      AGE
 pvc-deployment-5f9fdcff56-7dbcd                  2/2     Running   0             3m10s
 ```
 
 Вывод `tail -f` из контейнера `multitool`
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl exec pvc-deployment-5f9fdcff56-7dbcd -c multitool -- tail -f /data/shared_data.txt
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl exec pvc-deployment-5f9fdcff56-7dbcd -c multitool -- tail -f /data/shared_data.txt
 Sun Jul  5 18:00:15 UTC 2026
 Sun Jul  5 18:00:20 UTC 2026
 Sun Jul  5 18:00:25 UTC 2026
@@ -551,13 +551,13 @@ Sun Jul  5 18:01:05 UTC 2026
 Удаляю `deployment` и `PVC`
 Смотрю `kubectl describe pv`
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl delete deploy pvc-deployment
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl delete deploy pvc-deployment
 deployment.apps "pvc-deployment" deleted from default namespace
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl delete pvc pvc-local
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl delete pvc pvc-local
 persistentvolumeclaim "pvc-local" deleted from default namespace
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl describe pv pv-local
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl describe pv pv-local
 Name:            pv-local
 Labels:          <none>
 Annotations:     pv.kubernetes.io/bound-by-controller: yes
@@ -580,7 +580,7 @@ Events:            <none>
 
 Смотрю файл на локальном диске ноды
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# cat /data/pv-shared/shared_data.txt 
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# cat /data/pv-shared/shared_data.txt 
 Sun Jul  5 17:55:10 UTC 2026
 Sun Jul  5 17:55:15 UTC 2026
 Sun Jul  5 17:55:20 UTC 2026
@@ -610,7 +610,7 @@ Sun Jul  5 17:56:35 UTC 2026
 Статус Released означает, что запрос (PVC), который удерживал этот объем, был удален. Поскольку в манифесте PV была указана политика persistentVolumeReclaimPolicy: Retain, Kubernetes не удаляет сам объем и данные в нем. Однако PV не возвращается автоматически в статус Available, так как он все еще содержит данные предыдущего пользователя (PVC) и требует ручного вмешательства администратора для повторного использования.
 ```
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get pv
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl get pv
 NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM               STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
 pv-local   1Gi        RWO            Retain           Released   default/pvc-local   manual         <unset>                          16m
 ```
@@ -704,9 +704,9 @@ spec:
 
 3.1. Применение манифеста `sc.yaml`
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# nano sc.yaml
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# nano sc.yaml
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl apply -f sc.yaml
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl apply -f sc.yaml
 storageclass.storage.k8s.io/local-path-sc created
 persistentvolumeclaim/sc-pvc created
 deployment.apps/sc-deployment created
@@ -714,7 +714,7 @@ deployment.apps/sc-deployment created
 
 3.2. Вывод `kubectl get sc, pvc, pv` демонстрирующий автоматическое создание `PV`
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get sc,pvc,pv
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl get sc,pvc,pv
 NAME                                                      PROVISIONER            RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 storageclass.storage.k8s.io/local-path-sc                 microk8s.io/hostpath   Delete          Immediate              false                  2m48s
 storageclass.storage.k8s.io/microk8s-hostpath (default)   microk8s.io/hostpath   Delete          WaitForFirstConsumer   false                  29m
@@ -729,11 +729,11 @@ persistentvolume/pvc-e8eb2fc9-931a-45b4-8b8b-31f792231c1e   500Mi      RWO      
 
 3.3. Вывод `tail -f /data/dynamic_data.txt` из контейнера `multitool`, подтверждающий запись и чтение данных
 ```bash
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get po
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl get po
 NAME                                             READY   STATUS    RESTARTS      AGE
 sc-deployment-b546dc667-cnfbf                    2/2     Running   0             5m5s
 
-root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl exec sc-deployment-b546dc667-cnfbf -c multitool -- tail -f /data/dynamic_data.txt
+root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl exec sc-deployment-b546dc667-cnfbf -c multitool -- tail -f /data/dynamic_data.txt
 Sun Jul  5 18:24:55 UTC 2026
 Sun Jul  5 18:25:00 UTC 2026
 Sun Jul  5 18:25:05 UTC 2026
