@@ -1,27 +1,24 @@
-# Домашнее задание к занятию «Сетевое взаимодействие в Kubernetes» - Студент группы FOPS-42 Власов Владимир
+# Домашнее задание к занятию «Хранение в K8s» - Студент группы FOPS-42 Власов Владимир
 
-# Домашнее задание к занятию «Сетевое взаимодействие в Kubernetes»
-
-### Примерное время выполнения задания
-
-120 минут
+### Примерное время выполнения задания — 180 минут
 
 ### Цель задания
 
-Научиться настраивать доступ к приложениям в Kubernetes:
-- Внутри кластера через **Service** (ClusterIP, NodePort).
-- Снаружи кластера через **Ingress**.
+Научиться работать с хранилищами в тестовой среде Kubernetes:
+- обеспечить обмен файлами между контейнерами пода;
+- создавать **PersistentVolume** (PV) и использовать его в подах через **PersistentVolumeClaim** (PVC);
+- объявлять свой **StorageClass** (SC) и монтировать его в под через **PVC**.
 
-Это задание поможет вам освоить базовые принципы сетевого взаимодействия в Kubernetes — ключевого навыка для работы с кластерами.
-На практике Service и Ingress используются для доступа к приложениям, балансировки нагрузки и маршрутизации трафика. Понимание этих механизмов поможет вам упростить управление сервисами в рабочих окружениях и снизит риски ошибок при развёртывании.
+Это задание поможет вам освоить базовые принципы взаимодействия с хранилищами в Kubernetes — одного из ключевых навыков для работы с кластерами. На практике Volume, PV, PVC используются для хранения данных независимо от пода, обмена данными между подами и контейнерами внутри пода. Понимание этих механизмов поможет вам упростить проектирование слоя данных для приложений, разворачиваемых в кластере k8s.
 
 ------
 
 ## **Подготовка**
 ### **Чеклист готовности**
-- Установлен Kubernetes (MicroK8S, Minikube или другой).
-- Установлен `kubectl`.
-- Редактор для YAML-файлов (VS Code, Vim и др.).
+
+1. Установленное K8s-решение (допустим, MicroK8S).
+2. Установленный локальный kubectl.
+3. Редактор YAML-файлов с подключенным GitHub-репозиторием.
 
 ------
 
@@ -29,93 +26,84 @@
 
 1. [Инструкция](https://microk8s.io/docs/getting-started) по установке MicroK8S.
 2. [Инструкция](https://minikube.sigs.k8s.io/docs/start/?arch=%2Fwindows%2Fx86-64%2Fstable%2F.exe+download) по установке Minikube. 
-3. [Инструкция](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/)по установке kubectl.
+3. [Инструкция](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/) по установке kubectl.
 4. [Инструкция](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools) по установке VS Code
 
 ### Дополнительные материалы, которые пригодятся для выполнения задания
-
-1. [Описание](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) Deployment и примеры манифестов.
-2. [Описание](https://kubernetes.io/docs/concepts/services-networking/service/) Описание Service.
-3. [Описание](https://kubernetes.io/docs/concepts/services-networking/ingress/) Ingress.
-4. [Описание](https://github.com/wbitt/Network-MultiTool) Multitool.
+1. [Описание Volumes](https://kubernetes.io/docs/concepts/storage/volumes/).
+2. [Описание Ephemeral Volumes](https://kubernetes.io/docs/concepts/storage/volumes/).
+3. [Описание PersistentVolume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/).
+4. [Описание PersistentVolumeClaim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims).
+5. [Описание StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/).
+6. [Описание Multitool](https://github.com/wbitt/Network-MultiTool).
 
 ------
 
-## **Задание 1: Настройка Service (ClusterIP и NodePort)**
-### **Задача**
-Развернуть приложение из двух контейнеров (`nginx` и `multitool`) и обеспечить доступ к ним:
-- Внутри кластера через **ClusterIP**.
-- Снаружи через **NodePort**.
+## Задание 1. Volume: обмен данными между контейнерами в поде
+### Задача
 
-### **Шаги выполнения**
-1. **Создать Deployment** с двумя контейнерами:
-   - `nginx` (порт `80`).
-   - `multitool` (порт `8080`).
-   - Количество реплик: `3`.
-2. **Создать Service типа ClusterIP**, который:
-   - Открывает `nginx` на порту `9001`.
-   - Открывает `multitool` на порту `9002`.
-3. **Проверить доступность** изнутри кластера:
-```bash
- kubectl run test-pod --image=wbitt/network-multitool --rm -it -- sh
- curl <service-name>:9001 # Проверить nginx
- curl <service-name>:9002 # Проверить multitool
-```
-4. **Создать Service типа NodePort** для доступа к `nginx` снаружи.
-5. **Проверить доступ** с локального компьютера:
-```bash
- curl <node-ip>:<node-port>
-   ```
- или через браузер.
+Создать Deployment приложения, состоящего из двух контейнеров, обменивающихся данными.
 
-### **Что сдать на проверку**
+### Шаги выполнения
+1. Создать Deployment приложения, состоящего из контейнеров busybox и multitool.
+2. Настроить busybox на запись данных каждые 5 секунд в некий файл в общей директории.
+3. Обеспечить возможность чтения файла контейнером multitool.
+
+
+### Что сдать на проверку
 - Манифесты:
-  - `deployment-multi-container.yaml`
-  - `service-clusterip.yaml`
-  - `service-nodeport.yaml`
-- Скриншоты проверки доступа (`curl` или браузер).
+  - `containers-data-exchange.yaml`
+- Скриншоты:
+  - описание пода с контейнерами (`kubectl describe pods data-exchange`)
+  - вывод команды чтения файла (`tail -f <имя общего файла>`)
 
----
-## **Задание 2: Настройка Ingress**
-### **Задача**
-Развернуть два приложения (`frontend` и `backend`) и обеспечить доступ к ним через **Ingress** по разным путям.
+------
 
-### **Шаги выполнения**
-1. **Развернуть два Deployment**:
-   - `frontend` (образ `nginx`).
-   - `backend` (образ `wbitt/network-multitool`).
-2. **Создать Service** для каждого приложения.
-3. **Включить Ingress-контроллер**:
-```bash
- microk8s enable ingress
-   ```
-4. **Создать Ingress**, который:
-   - Открывает `frontend` по пути `/`.
-   - Открывает `backend` по пути `/api`.
-5. **Проверить доступность**:
-```bash
- curl <host>/
- curl <host>/api
-   ```
- или через браузер.
+## Задание 2. PV, PVC
+### Задача
+Создать Deployment приложения, использующего локальный PV, созданный вручную.
 
-### **Что сдать на проверку**
+### Шаги выполнения
+1. Создать Deployment приложения, состоящего из контейнеров busybox и multitool, использующего созданный ранее PVC
+2. Создать PV и PVC для подключения папки на локальной ноде, которая будет использована в поде.
+3. Продемонстрировать, что контейнер multitool может читать данные из файла в смонтированной директории, в который busybox записывает данные каждые 5 секунд. 
+4. Удалить Deployment и PVC. Продемонстрировать, что после этого произошло с PV. Пояснить, почему. (Используйте команду `kubectl describe pv`).
+5. Продемонстрировать, что файл сохранился на локальном диске ноды. Удалить PV.  Продемонстрировать, что произошло с файлом после удаления PV. Пояснить, почему.
+
+
+### Что сдать на проверку
 - Манифесты:
-  - `deployment-frontend.yaml`
-  - `deployment-backend.yaml`
-  - `service-frontend.yaml`
-  - `service-backend.yaml`
-  - `ingress.yaml`
-- Скриншоты проверки доступа (`curl` или браузер).
+  - `pv-pvc.yaml`
+- Скриншоты:
+  - каждый шаг выполнения задания, начиная с шага 2.
+- Описания:
+  - объяснение наблюдаемого поведения ресурсов в двух последних шагах.
 
+------
+
+## Задание 3. StorageClass
+### Задача
+Создать Deployment приложения, использующего PVC, созданный на основе StorageClass.
+
+### Шаги выполнения
+
+1. Создать Deployment приложения, состоящего из контейнеров busybox и multitool, использующего созданный ранее PVC.
+2. Создать SC и PVC для подключения папки на локальной ноде, которая будет использована в поде.
+3. Продемонстрировать, что контейнер multitool может читать данные из файла в смонтированной директории, в который busybox записывает данные каждые 5 секунд.
+
+### Что сдать на проверку
+- Манифесты:
+  - `sc.yaml`
+- Скриншоты:
+  - каждый шаг выполнения задания, начиная с шага 2
 ---
 ## Шаблоны манифестов с учебными комментариями
-### **1. Deployment (nginx + multitool)**
+### 1. Deployment (containers-data-exchange.yaml)
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: # ПРИМЕР: "multi-container-app"
+  name: data-exchange
 spec:
   replicas: # ЗАДАНИЕ: Укажите количество реплик
   selector:
@@ -124,57 +112,155 @@ spec:
   template:
     metadata:
       labels:
-        app: # ПОВТОРИТЕ метку из selector.matchLabels
+        app: # ПОВТОРИТЕ: Метка из selector.matchLabels
     spec:
       containers:
- - name: # ЗАДАНИЕ: Название первого контейнера
-        image: nginx
-        ports:
- - containerPort: 80
- - name: multitool
-        image: wbitt/network-multitool
-        ports:
- - containerPort: 8080
-        env:
- - name: HTTP_PORT
-          value: "8080" # КЛЮЧЕВОЙ МОМЕНТ: Порт должен совпадать с containerPort
+      - name: # ДОПОЛНИТЕ: Имя первого контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"] 
+        args: ["echo $(date) > путь_к_файлу; sleep 3600"] # КЛЮЧЕВОЕ: Команда записи данных в файл в директории из секции volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем эфемерного хранилища, объявленного на уровне пода.
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования эфемерного хранилища внутри контейнера 1
+      - name: # ДОПОЛНИТЕ: Имя второго контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args: ["tail -f путь_к_файлу"] # КЛЮЧЕВОЕ: Команда для чтения данных из файла, расположенного в директории, указанной в volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем эфемерного хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования эфемерного хранилища внутри контейнера 2
+      volumes:
+      - name: # ДОПОЛНИТЕ: Имя монтируемого раздела эфемерного хранилища
+        emptyDir: {} # ИНФОРМАЦИЯ: Определяем эфемерное хранилище, которое работает только внутри пода
 ```
-### **2. Ingress (для frontend и backend)**
+### 2. Deployment (pv-pvc.yaml)
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: # ЗАДАНИЕ: Придумайте имя, допустим example-ingress
-  annotations:  # ВАЖНО: Эта аннотация нужна для rewrite правил
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
- - http:
-      paths:
- - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: # УКАЖИТЕ: Имя frontend Service
-            port:
-              number: 80
- - path: /api # КЛЮЧЕВОЙ ПУТЬ: API endpoint
-        pathType: Prefix
-        backend:
-          service:
-            name: # УКАЖИТЕ: Имя backend Service
-            port:
-              number: 80
-```
 ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: # ДОПОЛНИТЕ: Имя хранилища
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: # КЛЮЧЕВОЕ: Путь к директории на ноде (хосте, на котором развёрнут кластер)
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: # ДОПОЛНИТЕ: Имя PVC
+spec:
+  volumeName: # ДОПОЛНИТЕ: Имя PV, к которому будет привязан PVC, должен совпадать с созданным ранее PV
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: # ДОПОЛНИТЕ: Какой объём хранилища вы хотите передать в контейнер. Должно быть меньше или равно параметру storage из PV
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange-pvc
+spec:
+  replicas: # ЗАДАНИЕ: Укажите количество реплик
+  selector:
+    matchLabels:
+      app: # ДОПОЛНИТЕ: Метка для селектора
+  template:
+    metadata:
+      labels:
+        app: # ПОВТОРИТЕ: Метка из selector.matchLabels
+    spec:
+      containers:
+      - name: # ДОПОЛНИТЕ: Имя первого контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"] 
+        args: ["echo $(date) > путь_к_файлу; sleep 3600"] # КЛЮЧЕВОЕ: Команда записи данных в файл в директории из секции volumeMounts контейнера 
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования хранилища внутри контейнера 1
+      - name: # ДОПОЛНИТЕ: Имя второго контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args: ["tail -f путь_к_файлу"] # КЛЮЧЕВОЕ: Команда для чтения данных из файла, расположенного в директории, указанной в volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования хранилища внутри контейнера 2
+      volumes:
+      - name: # ДОПОЛНИТЕ: Имя монтируемого раздела хранилища
+        persistentVolumeClaim:
+          claimName: # КЛЮЧЕВОЕ: Совпадает с именем PVC объявленного ранее
+```
+### 3. Deployment (sc.yaml)
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: # ДОПОЛНИТЕ: Имя StorageClass
+provisioner: kubernetes.io/no-provisioner # ИНФОРМАЦИЯ: Нет автоматического развёртывания
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: # ДОПОЛНИТЕ: Имя PVC
+spec:
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: # ДОПОЛНИТЕ: Какой объем хранилища вы хотите передать в контейнер. Должно быть меньше или равно параметру storage из PV
+  storageClassName: # ДОПОЛНИТЕ: Имя StorageClass. Должно совпадать с объявленным ранее
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange-sc
+spec:
+  replicas: # ЗАДАНИЕ: Укажите количество реплик
+  selector:
+    matchLabels:
+      app: # ДОПОЛНИТЕ: Метка для селектора
+  template:
+    metadata:
+      labels:
+        app: # ПОВТОРИТЕ: Метка из selector.matchLabels
+    spec:
+      containers:
+      - name: # ДОПОЛНИТЕ: Имя первого контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"] 
+        args: ["echo $(date) > путь_к_файлу; sleep 3600"] # КЛЮЧЕВОЕ: Команда для чтения данных из файла, расположенного в директории, указанной в volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования хранилища внутри контейнера 1
+      - name: # ДОПОЛНИТЕ: Имя второго контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args: ["tail -f путь_к_файлу"] # КЛЮЧЕВОЕ: Команда для чтения данных из файла, расположенного в директории, указанной в volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования хранилища внутри контейнера 2
+      volumes:
+      - name: # ДОПОЛНИТЕ: Имя монтируемого раздела хранилища
+        persistentVolumeClaim:
+          claimName: # КЛЮЧЕВОЕ: Совпадает с именем PVC объявленного ранее
+```
 
 ## **Правила приёма работы**
 1. Домашняя работа оформляется в своём Git-репозитории в файле README.md. Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
-2. Файл README.md должен содержать скриншоты вывода необходимых команд `kubectl` и скриншоты результатов.
+2. Файл README.md должен содержать скриншоты вывода необходимых команд `kubectl`, скриншоты результатов, пояснения.
 3. Репозиторий должен содержать тексты манифестов или ссылки на них в файле README.md.
 
 ## **Критерии оценивания задания**
-1. Зачёт: Все задачи выполнены, манифесты корректны, есть доказательства работы (скриншоты).
+1. Зачёт: Все задачи выполнены, манифесты корректны, есть доказательства работы (скриншоты) и пояснения по заданию 2.
 2. Доработка (на доработку задание направляется 1 раз): основные задачи выполнены, при этом есть ошибки в манифестах или отсутствуют проверочные скриншоты.
 3. Незачёт: работа выполнена не в полном объёме, есть ошибки в манифестах, отсутствуют проверочные скриншоты. Все попытки доработки израсходованы (на доработку работа направляется 1 раз). Этот вид оценки используется крайне редко.
 
@@ -182,510 +268,481 @@ spec:
 1. 5 дней на выполнение задания.
 2. 5 дней на доработку задания (в случае направления задания на доработку).
 
-### **Шаги выполнения**
-1. **Создать Deployment** с двумя контейнерами:
-   - `nginx` (порт `80`).
-   - `multitool` (порт `8080`).
-   - Количество реплик: `3`.
-2. **Создать Service типа ClusterIP**, который:
-   - Открывает `nginx` на порту `9001`.
-   - Открывает `multitool` на порту `9002`.
-3. **Проверить доступность** изнутри кластера:
+# Выполнение задания 1
+Применяю манифест
 ```bash
- kubectl run test-pod --image=wbitt/network-multitool --rm -it -- sh
- curl <service-name>:9001 # Проверить nginx
- curl <service-name>:9002 # Проверить multitool
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl apply -f containers-data-exchange.yaml
+deployment.apps/data-exchange created
 ```
-4. **Создать Service типа NodePort** для доступа к `nginx` снаружи.
-5. **Проверить доступ** с локального компьютера:
+
+Узнаю имя пода
 ```bash
- curl <node-ip>:<node-port>
-   ```
- или через браузер.
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get po
+NAME                                             READY   STATUS    RESTARTS      AGE
+data-exchange-77895dc648-lddws                   2/2     Running   0             38s
+```
 
-### **Что сдать на проверку**
-- Манифесты:
-  - `deployment-multi-container.yaml`
-  - `service-clusterip.yaml`
-  - `service-nodeport.yaml`
-- Скриншоты проверки доступа (`curl` или браузер).
+Смотрю подробную информацию о поде
+```bash
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl describe pod data-exchange-77895dc648-lddws
+```
 
+Вывод:
+```bash
+Name:             data-exchange-77895dc648-lddws
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             vm/192.168.218.128
+Start Time:       Sun, 05 Jul 2026 20:40:17 +0300
+Labels:           app=data-exchange
+                  pod-template-hash=77895dc648
+Annotations:      cni.projectcalico.org/containerID: c556812223dd63813eabffb72d081c0ef5a3ea3eea977447e069c4f190b04d65
+                  cni.projectcalico.org/podIP: 10.1.141.126/32
+                  cni.projectcalico.org/podIPs: 10.1.141.126/32
+Status:           Running
+IP:               10.1.141.126
+IPs:
+  IP:           10.1.141.126
+Controlled By:  ReplicaSet/data-exchange-77895dc648
+Containers:
+  busybox:
+    Container ID:  containerd://8336ccba539c7793c65fe43bfcabaa95326b9e0145ed535341c0d9afb0f5fc6a
+    Image:         busybox
+    Image ID:      docker.io/library/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      while true; do date >> /shared/data.txt; sleep 5; done
+    State:          Running
+      Started:      Sun, 05 Jul 2026 20:40:24 +0300
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /shared from shared-storage (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-lhsq5 (ro)
+  multitool:
+    Container ID:   containerd://55462da9b3a4b07f8b1e55676a315894980df81279a007b179f5bf4ec7fe6d18
+    Image:          wbitt/network-multitool
+    Image ID:       docker.io/wbitt/network-multitool@sha256:db2810fe2c8d36db074eab5d98fbf861c8ed55e0786d648d3477b3de9135632e
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Sun, 05 Jul 2026 20:40:25 +0300
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      HTTP_PORT:  8080
+    Mounts:
+      /shared from shared-storage (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-lhsq5 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  shared-storage:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  <unset>
+  kube-api-access-lhsq5:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  2m54s  default-scheduler  Successfully assigned default/data-exchange-77895dc648-lddws to vm
+  Normal  Pulling    2m51s  kubelet            Pulling image "busybox"
+  Normal  Pulled     2m47s  kubelet            Successfully pulled image "busybox" in 4.188s (4.188s including waiting). Image size: 2236931 bytes.
+  Normal  Created    2m47s  kubelet            Created container: busybox
+  Normal  Started    2m47s  kubelet            Started container busybox
+  Normal  Pulling    2m47s  kubelet            Pulling image "wbitt/network-multitool"
+  Normal  Pulled     2m46s  kubelet            Successfully pulled image "wbitt/network-multitool" in 1.041s (1.041s including waiting). Image size: 96718848 bytes.
+  Normal  Created    2m46s  kubelet            Created container: multitool
+  Normal  Started    2m46s  kubelet            Started container multitool
+```
+
+Подключаеюсь к контейнеру `multitool` и читаю общий файл, в который busybox записывает данные
+```bash
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl exec data-exchange-77895dc648-lddws -c multitool -- tail -f /shared/data.txt
+Sun Jul  5 17:44:59 UTC 2026
+Sun Jul  5 17:45:04 UTC 2026
+Sun Jul  5 17:45:09 UTC 2026
+Sun Jul  5 17:45:14 UTC 2026
+Sun Jul  5 17:45:19 UTC 2026
+Sun Jul  5 17:45:24 UTC 2026
+Sun Jul  5 17:45:29 UTC 2026
+Sun Jul  5 17:45:34 UTC 2026
+Sun Jul  5 17:45:39 UTC 2026
+Sun Jul  5 17:45:44 UTC 2026
+Sun Jul  5 17:45:49 UTC 2026
+```
+
+## Задание 2
+
+Манифест `pv-pvc.yaml`
+```yaml
 ---
-## **Задание 2: Настройка Ingress**
-### **Задача**
-Развернуть два приложения (`frontend` и `backend`) и обеспечить доступ к ним через **Ingress** по разным путям.
-
-### **Шаги выполнения**
-1. **Развернуть два Deployment**:
-   - `frontend` (образ `nginx`).
-   - `backend` (образ `wbitt/network-multitool`).
-2. **Создать Service** для каждого приложения.
-3. **Включить Ingress-контроллер**:
-```bash
- microk8s enable ingress
-   ```
-4. **Создать Ingress**, который:
-   - Открывает `frontend` по пути `/`.
-   - Открывает `backend` по пути `/api`.
-5. **Проверить доступность**:
-```bash
- curl <host>/
- curl <host>/api
-   ```
- или через браузер.
-
-### **Что сдать на проверку**
-- Манифесты:
-  - `deployment-frontend.yaml`
-  - `deployment-backend.yaml`
-  - `service-frontend.yaml`
-  - `service-backend.yaml`
-  - `ingress.yaml`
-- Скриншоты проверки доступа (`curl` или браузер).
-
-------
-
----
-
-## Выполнение Задания 1. Настройка Service (ClusterIP и NodePort):
-1. Создать Deployment с двумя контейнерами.
-```bash
-ubuntu@vm:~/Desktop/4-networks$ nano deployment-multi-container.yml
-```
-```yml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: multi-container-app-deployment
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: multi-container-app
-  template:
-    metadata:
-      labels:
-        app: multi-container-app
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.29.8
-        ports:
-        - containerPort: 80
-      - name: multitool
-        image: wbitt/network-multitool
-        ports:
-        - containerPort: 8080
-        env:
-          - name: HTTP_PORT
-            value: "8080"
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl apply -f deployment-multi-container.yml
-deployment.apps/multi-container-app-deployment created
-```
-
-2. Создать Service типа ClusterIP.
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# nano service-clusterip.yml
-```
-```yml
 apiVersion: v1
-kind: Service
+kind: PersistentVolume
 metadata:
-  name: clusterip-service
+  name: pv-local
 spec:
-  type: ClusterIP
-  selector:
-    app: multi-container-app
-  ports:
-    - name: nginx-port
-      port: 9001
-      targetPort: 80
-      protocol: TCP
-    - name: multitool-port
-      port: 9002
-      targetPort: 8080
-      protocol: TCP
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl apply -f service-clusterip.yml
-service/clusterip-service created
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl get all
-NAME                                                 READY   STATUS    RESTARTS      AGE
-pod/multi-container-app-deployment-b6c9674d9-fwc6b   2/2     Running   0             4m40s
-pod/multi-container-app-deployment-b6c9674d9-gkb78   2/2     Running   0             4m40s
-pod/multi-container-app-deployment-b6c9674d9-xfvhr   2/2     Running   0             4m40s
-
-NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
-service/clusterip-service   ClusterIP   10.152.183.180   <none>        9001/TCP,9002/TCP   71s
-
-NAME                                             READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/multi-container-app-deployment   3/3     3            3           4m40s
-
-NAME                                                       DESIRED   CURRENT   READY   AGE
-replicaset.apps/multi-container-app-deployment-b6c9674d9   3         3         3       4m40s
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl get ep
-Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
-NAME                ENDPOINTS                                                         AGE
-clusterip-service   10.1.141.100:8080,10.1.141.98:8080,10.1.141.99:8080 + 3 more...   3m24s
-kubernetes          192.168.218.128:16443                                             20d
-```
-
-3. **Проверить доступность** изнутри кластера.
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# kubectl run test-pod --image=wbitt/network-multitool --rm -it -- sh
-
-# Проверить nginx
-/ # curl clusterip-service:9001
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-html { color-scheme: light dark; }
-body { width: 35em; margin: 0 auto;
-font-family: Tahoma, Verdana, Arial, sans-serif; }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, nginx is successfully installed and working.
-Further configuration is required for the web server, reverse proxy, 
-API gateway, load balancer, content cache, or other features.</p>
-<p>For online documentation and support please refer to
-<a href="https://nginx.org/">nginx.org</a>.<br/>
-To engage with the community please visit
-<a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
-For enterprise grade support, professional services, additional 
-security features and capabilities please refer to
-<a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
-
-# Проверить multitool
-/ # curl clusterip-service:9002
-WBITT Network MultiTool (with NGINX) - multi-container-app-deployment-b6c9674d9-xfvhr - 10.1.141.98 - HTTP: 8080 , HTTPS: 443 . (Formerly praqma/network-multitool)
-
-# Выходим [Ctrl]+[D]
-Session ended, resume using 'kubectl attach test-pod -c test-pod -i -t' command when the pod is running
-pod "test-pod" deleted
-```
-
-4. **Создать Service типа NodePort** для доступа к `nginx` снаружи.
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# nano service-nodeport.yml
-```
-```yml
-apiVersion: v1
-kind: Service
-metadata:
-  name: clusterip-service
-spec:
-  type: NodePort
-  selector:
-    app: multi-container-app
-  ports:
-    - name: nginx-port
-      port: 9001
-      targetPort: 80
-      protocol: TCP
-    - name: multitool-port
-      port: 9002
-      targetPort: 8080
-      protocol: TCP
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl apply -f service-nodeport.yml
-service/clusterip-service configured
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl get all
-NAME                                                 READY   STATUS    RESTARTS      AGE
-pod/multi-container-app-deployment-b6c9674d9-fwc6b   2/2     Running   0             19m
-pod/multi-container-app-deployment-b6c9674d9-gkb78   2/2     Running   0             19m
-pod/multi-container-app-deployment-b6c9674d9-xfvhr   2/2     Running   0             19m
-
-NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                         AGE
-service/clusterip-service   NodePort    10.152.183.180   <none>        9001:30747/TCP,9002:32161/TCP   16m
-service/kubernetes          ClusterIP   10.152.183.1     <none>        443/TCP                         20d
-
-NAME                                             READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/multi-container-app-deployment   3/3     3            3           19m
-
-NAME                                                       DESIRED   CURRENT   READY   AGE
-replicaset.apps/multi-container-app-deployment-b6c9674d9   3         3         3       19m
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl get ep
-Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
-NAME                ENDPOINTS                                                         AGE
-clusterip-service   10.1.141.100:8080,10.1.141.98:8080,10.1.141.99:8080 + 3 more...   18m
-```
-
-5. **Проверить доступ** с локального компьютера:
-```bash
-C:\Users\DragonDamage>curl curl 192.168.218.128:32161                                                                   curl: (6) Could not resolve host: curl                                                                                  WBITT Network MultiTool (with NGINX) - multi-container-app-deployment-b6c9674d9-fwc6b - 10.1.141.99 - HTTP: 8080 , HTTPS: 443 . (Formerly praqma/network-multitool) 
-```
-```bash
-C:\Users\DragonDamage>curl 192.168.218.128:30747                                                                        <!DOCTYPE html>                                                                                                         <html>                                                                                                                  <head>                                                                                                                  <title>Welcome to nginx!</title>                                                                                        <style>                                                                                                                 html { color-scheme: light dark; }                                                                                      body { width: 35em; margin: 0 auto;                                                                                     font-family: Tahoma, Verdana, Arial, sans-serif; }                                                                      </style>                                                                                                                </head>                                                                                                                 <body>                                                                                                                  <h1>Welcome to nginx!</h1>                                                                                              <p>If you see this page, nginx is successfully installed and working.                                                   Further configuration is required for the web server, reverse proxy,                                                    API gateway, load balancer, content cache, or other features.</p>                                                                                                                                                                               <p>For online documentation and support please refer to                                                                 <a href="https://nginx.org/">nginx.org</a>.<br/>                                                                        To engage with the community please visit                                                                               <a href="https://community.nginx.org/">community.nginx.org</a>.<br/>                                                    For enterprise grade support, professional services, additional                                                         security features and capabilities please refer to                                                                      <a href="https://f5.com/nginx">f5.com/nginx</a>.</p>                                                                                                                                                                                            <p><em>Thank you for using nginx.</em></p>                                                                              </body>                                                                                                                 </html>  
-```
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/data/pv-shared"
+  storageClassName: manual
 
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-local
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 
-## Задание 2. Настройка Ingress
-
-### **Задача**
-Развернуть два приложения (`frontend` и `backend`) и обеспечить доступ к ним через **Ingress** по разным путям.
-
-### **Шаги выполнения**
-1. **Развернуть два Deployment**:
-   - `frontend` (образ `nginx`).
-   - `backend` (образ `wbitt/network-multitool`).
-2. **Создать Service** для каждого приложения.
-3. **Включить Ingress-контроллер**:
-```bash
- microk8s enable ingress
-```
-4. **Создать Ingress**, который:
-   - Открывает `frontend` по пути `/`.
-   - Открывает `backend` по пути `/api`.
-5. **Проверить доступность**:
-```bash
- curl <host>/
- curl <host>/api
-```
-
-## Выполнение задания 2. Настройка Ingress:
-1. Развернуть два Deployment front и back
-## Frontend
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# nano deployment-frontend.yml
-```
-```yml
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-deployment
-  labels:
-    app: frontend
+  name: pvc-deployment
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: frontend
+      app: storage-test
   template:
     metadata:
       labels:
-        app: frontend
+        app: storage-test
     spec:
       containers:
-        - name: nginx
-          image: nginx:1.29.8
-          ports:
-            - containerPort: 80
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "100m"
-            limits:
-              memory: "128Mi"
-              cpu: "200m"
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl apply -f deployment-frontend.yml
-deployment.apps/frontend-deployment created
-```
-## Backend
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# # nano deployment-backend.yml
-```
-```yml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: backend-deployment
-  labels:
-    app: backend
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: backend
-  template:
-    metadata:
-      labels:
-        app: backend
-    spec:
-      containers:
+        - name: busybox
+          image: busybox
+          command: ['sh', '-c', 'while true; do date >> /data/shared_data.txt; sleep 5; done']
+          volumeMounts:
+            - name: my-persistent-storage
+              mountPath: /data
         - name: multitool
           image: wbitt/network-multitool
-          ports:
-            - containerPort: 8080
           env:
             - name: HTTP_PORT
               value: "8080"
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "256Mi"
-              cpu: "200m"
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl apply -f deployment-backend.yml
-deployment.apps/backend-deployment created
+          volumeMounts:
+            - name: my-persistent-storage
+              mountPath: /data
+      volumes:
+        - name: my-persistent-storage
+          persistentVolumeClaim:
+            claimName: pvc-local
 ```
 
-2. Создать Service для каждого приложения.
-## Frontend
+Cоздание директории и включения `hostpath-storage`
 ```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# # nano service-frontend.yml
+root@vm:/home/bogatyrevam/Desktop/5-storages# mkdir -p /data/pv-shared
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# chmod 777 /data/pv-shared
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s enablee hostpath-storage
+'enablee' is not a valid MicroK8s subcommand.
+Available subcommands are:
+	add-node
+	addons
+	config
+	ctr
+	dashboard-proxy
+	dbctl
+	disable
+	enable
+	helm
+	helm3
+	images
+	istioctl
+	join
+	kubectl
+	leave
+	linkerd
+	refresh-certs
+	remove-node
+	reset
+	start
+	status
+	stop
+	version
+	inspect
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s enable hostpath-storage
+Infer repository core for addon hostpath-storage
+Enabling default storage class.
+WARNING: Hostpath storage is not suitable for production environments.
+         A hostpath volume can grow beyond the size limit set in the volume claim manifest.
+
+deployment.apps/hostpath-provisioner created
+storageclass.storage.k8s.io/microk8s-hostpath created
+serviceaccount/microk8s-hostpath created
+clusterrole.rbac.authorization.k8s.io/microk8s-hostpath created
+clusterrolebinding.rbac.authorization.k8s.io/microk8s-hostpath created
+Storage will be available soon.
 ```
-```yml
+
+Применение манифеста pv-pvc.yaml
+
+```bash
+root@vm:/home/bogatyrevam/Desktop/5-storages# nano pv-pvc.yaml
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl apply -f pv-pvc.yaml
+persistentvolume/pv-local created
+persistentvolumeclaim/pvc-local created
+deployment.apps/pvc-deployment created
+```
+
+Вывод `kubectl get pv`,`pvc` и `kubectl get po`
+```bash
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get pv
+NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM               STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pv-local   1Gi        RWO            Retain           Bound    default/pvc-local   manual         <unset>                          2m12s
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get pvc
+NAME        STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+pvc-local   Bound    pv-local   1Gi        RWO            manual         <unset>                 2m19s
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get po
+NAME                                             READY   STATUS    RESTARTS      AGE
+pvc-deployment-5f9fdcff56-7dbcd                  2/2     Running   0             3m10s
+```
+
+Вывод `tail -f` из контейнера `multitool`
+```bash
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl exec pvc-deployment-5f9fdcff56-7dbcd -c multitool -- tail -f /data/shared_data.txt
+Sun Jul  5 18:00:15 UTC 2026
+Sun Jul  5 18:00:20 UTC 2026
+Sun Jul  5 18:00:25 UTC 2026
+Sun Jul  5 18:00:30 UTC 2026
+Sun Jul  5 18:00:35 UTC 2026
+Sun Jul  5 18:00:40 UTC 2026
+Sun Jul  5 18:00:45 UTC 2026
+Sun Jul  5 18:00:50 UTC 2026
+Sun Jul  5 18:00:55 UTC 2026
+Sun Jul  5 18:01:00 UTC 2026
+Sun Jul  5 18:01:05 UTC 2026
+```
+
+Удаляю `deployment` и `PVC`
+Смотрю `kubectl describe pv`
+```bash
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl delete deploy pvc-deployment
+deployment.apps "pvc-deployment" deleted from default namespace
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl delete pvc pvc-local
+persistentvolumeclaim "pvc-local" deleted from default namespace
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl describe pv pv-local
+Name:            pv-local
+Labels:          <none>
+Annotations:     pv.kubernetes.io/bound-by-controller: yes
+Finalizers:      [kubernetes.io/pv-protection]
+StorageClass:    manual
+Status:          Released
+Claim:           default/pvc-local
+Reclaim Policy:  Retain
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        1Gi
+Node Affinity:   <none>
+Message:         
+Source:
+    Type:          HostPath (bare host directory volume)
+    Path:          /data/pv-shared
+    HostPathType:  
+Events:            <none>
+```
+
+Смотрю файл на локальном диске ноды
+```bash
+root@vm:/home/bogatyrevam/Desktop/5-storages# cat /data/pv-shared/shared_data.txt 
+Sun Jul  5 17:55:10 UTC 2026
+Sun Jul  5 17:55:15 UTC 2026
+Sun Jul  5 17:55:20 UTC 2026
+Sun Jul  5 17:55:25 UTC 2026
+Sun Jul  5 17:55:30 UTC 2026
+Sun Jul  5 17:55:35 UTC 2026
+Sun Jul  5 17:55:40 UTC 2026
+Sun Jul  5 17:55:45 UTC 2026
+Sun Jul  5 17:55:50 UTC 2026
+Sun Jul  5 17:55:55 UTC 2026
+Sun Jul  5 17:56:00 UTC 2026
+Sun Jul  5 17:56:05 UTC 2026
+Sun Jul  5 17:56:10 UTC 2026
+Sun Jul  5 17:56:15 UTC 2026
+Sun Jul  5 17:56:20 UTC 2026
+Sun Jul  5 17:56:25 UTC 2026
+Sun Jul  5 17:56:30 UTC 2026
+Sun Jul  5 17:56:35 UTC 2026
+```
+
+Состояние `PV`
+```
+Наблюдаемое поведение:
+После удаления deployment и PVC команда kubectl get pv показывает, что статус pv-local изменился с Bound на Released.
+
+Пояснение:
+Статус Released означает, что запрос (PVC), который удерживал этот объем, был удален. Поскольку в манифесте PV была указана политика persistentVolumeReclaimPolicy: Retain, Kubernetes не удаляет сам объем и данные в нем. Однако PV не возвращается автоматически в статус Available, так как он все еще содержит данные предыдущего пользователя (PVC) и требует ручного вмешательства администратора для повторного использования.
+```
+```bash
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get pv
+NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM               STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pv-local   1Gi        RWO            Retain           Released   default/pvc-local   manual         <unset>                          16m
+```
+
+Сохраняемость файла на локальном диске ноды
+```
+Наблюдаемое поведение:
+При проверке директории на хост-системе (/data/pv-shared/shared_data.txt) файл остается на месте и содержит все записанные ранее данные.
+
+Пояснение:
+Это результат работы политики Retain. Она гарантирует, что физические данные на ноде сохраняются независимо от жизненного цикла объектов PVC в кластере.
+```
+
+Удаление PV и состояние файла
+```bash
+Наблюдаемое поведение:
+После удаления объекта PV с помощью kubectl delete pv pv-local, файл на локальном диске по адресу /data/pv-shared/shared_data.txt по-прежнему существует.
+
+Пояснение:
+Для типов томов hostPath Kubernetes управляет только объектом в API (самой записью о PV). При удалении ресурса PV из кластера, Kubernetes удаляет только "логическое" описание тома. Удаление фактических данных в локальной директории на ноде не производится. Это механизм защиты от случайной потери данных, требующий от администратора системы ручной очистки дискового пространства на физическом уровне.
+```
+
+
+
+## Задание 3
+
+1. Манифест `sc.yaml`
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path-sc
+provisioner: microk8s.io/hostpath
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
 apiVersion: v1
-kind: Service
+kind: PersistentVolumeClaim
 metadata:
-  name: frontend-service
+  name: sc-pvc
 spec:
-  type: ClusterIP
+  storageClassName: local-path-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sc-deployment
+spec:
+  replicas: 1
   selector:
-    app: frontend
-  ports:
-    - name: nginx-port
-      port: 80
-      targetPort: 80
-      protocol: TCP
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl apply -f service-frontend.yml
-service/frontend-service created
-```
-
-## Backend
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# # nano service-backend.yml
-```
-```yml
-apiVersion: v1
-kind: Service
-metadata:
-  name: backend-service
-spec:
-  type: ClusterIP
-  selector:
-    app: backend
-  ports:
-    - name: multitool-port
-      port: 8080
-      targetPort: 8080
-      protocol: TCP
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl apply -f service-backend.yml
-service/backend-service created
+    matchLabels:
+      app: sc-test
+  template:
+    metadata:
+      labels:
+        app: sc-test
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          command: ['sh', '-c', 'while true; do date >> /data/dynamic_data.txt; sleep 5; done']
+          volumeMounts:
+            - name: dynamic-storage
+              mountPath: /data
+        - name: multitool
+          image: wbitt/network-multitool
+          env:
+            - name: HTTP_PORT
+              value: "8080"
+          volumeMounts:
+            - name: dynamic-storage
+              mountPath: /data
+      volumes:
+        - name: dynamic-storage
+          persistentVolumeClaim:
+            claimName: sc-pvc
 ```
 
-3. Включить Ingress-контроллер
+2. Описание процесса и результаты
+В данном задании был реализован механизм динамического выделения ресурсов:
+
+  1. Создан StorageClass, использующий провиженер `microk8s.io/hostpath`.
+  2. Создан PVC, который автоматически инициировал создание соответствующего PV (статус `Bound` подтверждает успешную связку).
+  3. Развернут deployment с двумя контейнерами, которые используют общий динамический том для обмена данными.
+
+3.1. Применение манифеста `sc.yaml`
 ```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s enable ingress
-Infer repository core for addon ingress
-Addon core/ingress is already enabled
+root@vm:/home/bogatyrevam/Desktop/5-storages# nano sc.yaml
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl apply -f sc.yaml
+storageclass.storage.k8s.io/local-path-sc created
+persistentvolumeclaim/sc-pvc created
+deployment.apps/sc-deployment created
 ```
 
-4. Создать Ingress, который
-   - Открывает `frontend` по пути `/`.
-   - Открывает `backend` по пути `/api`.
-
+3.2. Вывод `kubectl get sc, pvc, pv` демонстрирующий автоматическое создание `PV`
 ```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# # nano ingress.yml
-```
-```yml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: example-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-    - http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend-service
-                port:
-                  number: 80
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: backend-service
-                port:
-                  number: 8080
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl apply -f ingress.yml
-ingress.networking.k8s.io/example-ingress created
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl get all
-NAME                                                 READY   STATUS    RESTARTS      AGE
-pod/backend-deployment-6fbcf84f7c-5lz5l              1/1     Running   0             11m
-pod/backend-deployment-6fbcf84f7c-wxgt4              1/1     Running   0             11m
-pod/backend-deployment-6fbcf84f7c-zbrf7              1/1     Running   0             11m
-pod/frontend-deployment-68d9997d78-hzmkx             1/1     Running   0             12m
-pod/frontend-deployment-68d9997d78-jq646             1/1     Running   0             12m
-pod/frontend-deployment-68d9997d78-t4qx9             1/1     Running   0             12m
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get sc,pvc,pv
+NAME                                                      PROVISIONER            RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+storageclass.storage.k8s.io/local-path-sc                 microk8s.io/hostpath   Delete          Immediate              false                  2m48s
+storageclass.storage.k8s.io/microk8s-hostpath (default)   microk8s.io/hostpath   Delete          WaitForFirstConsumer   false                  29m
 
-NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                         AGE
-service/backend-service     ClusterIP   10.152.183.18    <none>        8080/TCP                        29s
-service/frontend-service    ClusterIP   10.152.183.157   <none>        80/TCP                          9m4s
-service/kubernetes          ClusterIP   10.152.183.1     <none>        443/TCP                         20d
+NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS    VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/sc-pvc   Bound    pvc-e8eb2fc9-931a-45b4-8b8b-31f792231c1e   500Mi      RWO            local-path-sc   <unset>                 2m47s
 
-NAME                                             READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/backend-deployment               3/3     3            3           11m
-deployment.apps/frontend-deployment              3/3     3            3           12m
-
-NAME                                                       DESIRED   CURRENT   READY   AGE
-replicaset.apps/backend-deployment-6fbcf84f7c              3         3         3       11m
-replicaset.apps/frontend-deployment-68d9997d78             3         3         3       12m
-```
-```bash
-root@ubuntu2204:/home/ubuntu/Desktop/4-networks# microk8s kubectl describe ingress
-Name:             example-ingress
-Labels:           <none>
-Namespace:        default
-Address:          127.0.0.1
-Ingress Class:    public
-Default backend:  <default>
-Rules:
-  Host        Path  Backends
-  ----        ----  --------
-  *           
-              /      frontend-service:80 (10.1.141.96:80,10.1.141.92:80,10.1.141.94:80)
-              /api   backend-service:8080 (10.1.141.95:8080,10.1.141.106:8080,10.1.141.101:8080)
-Annotations:  nginx.ingress.kubernetes.io/rewrite-target: /
-Events:       <none>
+NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM               STORAGECLASS    VOLUMEATTRIBUTESCLASS   REASON   AGE
+persistentvolume/pv-local                                   1Gi        RWO            Retain           Released   default/pvc-local   manual          <unset>                          27m
+persistentvolume/pvc-e8eb2fc9-931a-45b4-8b8b-31f792231c1e   500Mi      RWO            Delete           Bound      default/sc-pvc      local-path-sc   <unset>                          2m32s
 ```
 
-5. Проверить доступность
+3.3. Вывод `tail -f /data/dynamic_data.txt` из контейнера `multitool`, подтверждающий запись и чтение данных
 ```bash
-curl <host>/
-curl <host>/api
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl get po
+NAME                                             READY   STATUS    RESTARTS      AGE
+sc-deployment-b546dc667-cnfbf                    2/2     Running   0             5m5s
+
+root@vm:/home/bogatyrevam/Desktop/5-storages# microk8s kubectl exec sc-deployment-b546dc667-cnfbf -c multitool -- tail -f /data/dynamic_data.txt
+Sun Jul  5 18:24:55 UTC 2026
+Sun Jul  5 18:25:00 UTC 2026
+Sun Jul  5 18:25:05 UTC 2026
+Sun Jul  5 18:25:10 UTC 2026
+Sun Jul  5 18:25:15 UTC 2026
+Sun Jul  5 18:25:20 UTC 2026
+Sun Jul  5 18:25:25 UTC 2026
+Sun Jul  5 18:25:30 UTC 2026
+Sun Jul  5 18:25:35 UTC 2026
+Sun Jul  5 18:25:40 UTC 2026
 ```
-```bash
-C:\Users\DragonDamage>curl 192.168.218.128                                                                              <!DOCTYPE html>                                                                                                         <html>                                                                                                                  <head>                                                                                                                  <title>Welcome to nginx!</title>                                                                                        <style>                                                                                                                 html { color-scheme: light dark; }                                                                                      body { width: 35em; margin: 0 auto;                                                                                     font-family: Tahoma, Verdana, Arial, sans-serif; }                                                                      </style>                                                                                                                </head>                                                                                                                 <body>                                                                                                                  <h1>Welcome to nginx!</h1>                                                                                              <p>If you see this page, nginx is successfully installed and working.                                                   Further configuration is required for the web server, reverse proxy,                                                    API gateway, load balancer, content cache, or other features.</p>                                                                                                                                                                               <p>For online documentation and support please refer to                                                                 <a href="https://nginx.org/">nginx.org</a>.<br/>                                                                        To engage with the community please visit                                                                               <a href="https://community.nginx.org/">community.nginx.org</a>.<br/>                                                    For enterprise grade support, professional services, additional                                                         security features and capabilities please refer to                                                                      <a href="https://f5.com/nginx">f5.com/nginx</a>.</p>                                                                                                                                                                                            <p><em>Thank you for using nginx.</em></p>                                                                              </body>                                                                                                                 </html> 
-```
-```bash
-curl 192.168.218.128/api
-WBITT Network MultiTool (with NGINX) - backend-deployment-6fbcf84f7c-zbrf7 - 10.1.141.106 - HTTP: 8080 , HTTPS: 443 . (Formerly praqma/network-multitool)
-```
+
