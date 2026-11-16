@@ -378,17 +378,17 @@ Events:
 Подключаеюсь к контейнеру `multitool` и читаю общий файл, в который busybox записывает данные
 ```bash
 root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl exec data-exchange-77895dc648-lddws -c multitool -- tail -f /shared/data.txt
-Sun Jul  5 17:44:59 UTC 2026
-Sun Jul  5 17:45:04 UTC 2026
-Sun Jul  5 17:45:09 UTC 2026
-Sun Jul  5 17:45:14 UTC 2026
-Sun Jul  5 17:45:19 UTC 2026
-Sun Jul  5 17:45:24 UTC 2026
-Sun Jul  5 17:45:29 UTC 2026
-Sun Jul  5 17:45:34 UTC 2026
-Sun Jul  5 17:45:39 UTC 2026
-Sun Jul  5 17:45:44 UTC 2026
-Sun Jul  5 17:45:49 UTC 2026
+Sun Nov 15 17:44:59 UTC 2026
+Sun Nov 15 17:45:04 UTC 2026
+Sun Nov 15 17:45:09 UTC 2026
+Sun Nov 15 17:45:14 UTC 2026
+Sun Nov 15 17:45:19 UTC 2026
+Sun Nov 15 17:45:24 UTC 2026
+Sun Nov 15 17:45:29 UTC 2026
+Sun Nov 15 17:45:34 UTC 2026
+Sun Nov 15 17:45:39 UTC 2026
+Sun Nov 15 17:45:44 UTC 2026
+Sun Nov 15 17:45:49 UTC 2026
 ```
 
 ## Задание 2
@@ -535,17 +535,17 @@ pvc-deployment-5f9fdcff56-7dbcd                  2/2     Running   0            
 Вывод `tail -f` из контейнера `multitool`
 ```bash
 root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl exec pvc-deployment-5f9fdcff56-7dbcd -c multitool -- tail -f /data/shared_data.txt
-Sun Jul  5 18:00:15 UTC 2026
-Sun Jul  5 18:00:20 UTC 2026
-Sun Jul  5 18:00:25 UTC 2026
-Sun Jul  5 18:00:30 UTC 2026
-Sun Jul  5 18:00:35 UTC 2026
-Sun Jul  5 18:00:40 UTC 2026
-Sun Jul  5 18:00:45 UTC 2026
-Sun Jul  5 18:00:50 UTC 2026
-Sun Jul  5 18:00:55 UTC 2026
-Sun Jul  5 18:01:00 UTC 2026
-Sun Jul  5 18:01:05 UTC 2026
+Sun Nov 15 18:00:15 UTC 2026
+Sun Nov 15 18:00:20 UTC 2026
+Sun Nov 15 18:00:25 UTC 2026
+Sun Nov 15 18:00:30 UTC 2026
+Sun Nov 15 18:00:35 UTC 2026
+Sun Nov 15 18:00:40 UTC 2026
+Sun Nov 15 18:00:45 UTC 2026
+Sun Nov 15 18:00:50 UTC 2026
+Sun Nov 15 18:00:55 UTC 2026
+Sun Nov 15 18:01:00 UTC 2026
+Sun Nov 15 18:01:05 UTC 2026
 ```
 
 Удаляю `deployment` и `PVC`
@@ -581,24 +581,24 @@ Events:            <none>
 Смотрю файл на локальном диске ноды
 ```bash
 root@ubuntu2204:/home/ubuntu/Desktop/5-storages# cat /data/pv-shared/shared_data.txt 
-Sun Jul  5 17:55:10 UTC 2026
-Sun Jul  5 17:55:15 UTC 2026
-Sun Jul  5 17:55:20 UTC 2026
-Sun Jul  5 17:55:25 UTC 2026
-Sun Jul  5 17:55:30 UTC 2026
-Sun Jul  5 17:55:35 UTC 2026
-Sun Jul  5 17:55:40 UTC 2026
-Sun Jul  5 17:55:45 UTC 2026
-Sun Jul  5 17:55:50 UTC 2026
-Sun Jul  5 17:55:55 UTC 2026
-Sun Jul  5 17:56:00 UTC 2026
-Sun Jul  5 17:56:05 UTC 2026
-Sun Jul  5 17:56:10 UTC 2026
-Sun Jul  5 17:56:15 UTC 2026
-Sun Jul  5 17:56:20 UTC 2026
-Sun Jul  5 17:56:25 UTC 2026
-Sun Jul  5 17:56:30 UTC 2026
-Sun Jul  5 17:56:35 UTC 2026
+Sun Nov 15 17:55:10 UTC 2026
+Sun Nov 15 17:55:15 UTC 2026
+Sun Nov 15 17:55:20 UTC 2026
+Sun Nov 15 17:55:25 UTC 2026
+Sun Nov 15 17:55:30 UTC 2026
+Sun Nov 15 17:55:35 UTC 2026
+Sun Nov 15 17:55:40 UTC 2026
+Sun Nov 15 17:55:45 UTC 2026
+Sun Nov 15 17:55:50 UTC 2026
+Sun Nov 15 17:55:55 UTC 2026
+Sun Nov 15 17:56:00 UTC 2026
+Sun Nov 15 17:56:05 UTC 2026
+Sun Nov 15 17:56:10 UTC 2026
+Sun Nov 15 17:56:15 UTC 2026
+Sun Nov 15 17:56:20 UTC 2026
+Sun Nov 15 17:56:25 UTC 2026
+Sun Nov 15 17:56:30 UTC 2026
+Sun Nov 15 17:56:35 UTC 2026
 ```
 
 Состояние `PV`
@@ -734,15 +734,15 @@ NAME                                             READY   STATUS    RESTARTS     
 sc-deployment-b546dc667-cnfbf                    2/2     Running   0             5m5s
 
 root@ubuntu2204:/home/ubuntu/Desktop/5-storages# microk8s kubectl exec sc-deployment-b546dc667-cnfbf -c multitool -- tail -f /data/dynamic_data.txt
-Sun Jul  5 18:24:55 UTC 2026
-Sun Jul  5 18:25:00 UTC 2026
-Sun Jul  5 18:25:05 UTC 2026
-Sun Jul  5 18:25:10 UTC 2026
-Sun Jul  5 18:25:15 UTC 2026
-Sun Jul  5 18:25:20 UTC 2026
-Sun Jul  5 18:25:25 UTC 2026
-Sun Jul  5 18:25:30 UTC 2026
-Sun Jul  5 18:25:35 UTC 2026
-Sun Jul  5 18:25:40 UTC 2026
+Sun Nov 15 18:24:55 UTC 2026
+Sun Nov 15 18:25:00 UTC 2026
+Sun Nov 15 18:25:05 UTC 2026
+Sun Nov 15 18:25:10 UTC 2026
+Sun Nov 15 18:25:15 UTC 2026
+Sun Nov 15 18:25:20 UTC 2026
+Sun Nov 15 18:25:25 UTC 2026
+Sun Nov 15 18:25:30 UTC 2026
+Sun Nov 15 18:25:35 UTC 2026
+Sun Nov 15 18:25:40 UTC 2026
 ```
 
