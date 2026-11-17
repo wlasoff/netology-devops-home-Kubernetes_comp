@@ -38,10 +38,10 @@
 ### Требования:
 | Type | RAM | vCPU | Replicas |
 | ---- | ---- | ---- | ---- |
-| Database | 4GB | 1 | 3 |
-| Cache | 4GB | 13 |
-| Frontend | 50MB | 0.2 | 5 |
-| Backend | 600MB | 1 | 10 |
+| Database |  4GB |  1 |  3 |
+| Cache |  4GB |  13 |
+| Frontend |  50MB |  0.2 |  5 |
+| Backend |  600MB |  1 |  10 |
 
 ### Ресурсы:
 
